@@ -43,15 +43,14 @@ class MemoryRequest(BaseModel):
 
 # --- Reusable Route Logic ---
 async def render_dashboard(request: Request):
-    stats = sloth_orchestrator.get_summary_stats()
-    domain_status = domain_verifier.verify_domain_status()
-    tasks = sloth_orchestrator.processed_tasks
-    memories = backboard_service.list_all_memories()
-    benchmark = tinker_service.get_benchmark_metrics()
-    
-    return templates.TemplateResponse(
-        "index.html",
-        {
+    try:
+        stats = sloth_orchestrator.get_summary_stats()
+        domain_status = domain_verifier.verify_domain_status()
+        tasks = sloth_orchestrator.processed_tasks
+        memories = backboard_service.list_all_memories()
+        benchmark = tinker_service.get_benchmark_metrics()
+        
+        context = {
             "request": request,
             "stats": stats,
             "domain_status": domain_status,
@@ -60,7 +59,13 @@ async def render_dashboard(request: Request):
             "benchmark": benchmark,
             "settings": settings
         }
-    )
+        try:
+            return templates.TemplateResponse(request=request, name="index.html", context=context)
+        except Exception:
+            return templates.TemplateResponse("index.html", context)
+    except Exception as e:
+        import traceback
+        return HTMLResponse(f"<h3>Dashboard Render Error</h3><pre>{traceback.format_exc()}</pre>", status_code=500)
 
 async def get_health():
     return {
