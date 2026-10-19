@@ -51,32 +51,25 @@ The repository includes:
 
 ## How I Built It
 
-SlothOps is designed as a unified stack integrating **all 4 official Hacktoberfest partners**:
+### Architecture & Integration Flow
 
-```
-+-------------------------------------------------------------------------+
-|                        slothops.shivysidinfo.tech                       |
-|                          (.tech Domains + TLS)                          |
-+------------------------------------+------------------------------------+
-                                     |
-                                     v
-+-------------------------------------------------------------------------+
-|                       Render Cloud Infrastructure                       |
-|  +------------------------------+    +-------------------------------+  |
-|  |   slothops-web (FastAPI)     |    |   slothops-worker (Worker)    |  |
-|  |   - Interactive UI & REST    |<-->|   - Autonomous queue poller   |  |
-|  |   - Partner telemetry API    |    |   - Periodic chore triager    |  |
-|  +------------------------------+    +-------------------------------+  |
-+-------------------+--------------------------------+--------------------+
-                    |                                |
-                    v                                v
-+------------------------------------+  +---------------------------------+
-|      Thinking Machines (Tinker)    |  |          Backboard.io           |
-|  - meta-llama/Llama-3-8B-Instruct  |  |  - Stateful SlothOps Agent      |
-|  - LoRA fine-tuning (rank 16)      |  |  - Long-term memory extraction  |
-|  - SlothDistill-8B noise reducer   |  |  - Semantic preference recall   |
-+------------------------------------+  +---------------------------------+
-```
+SlothOps links all 4 partners in a continuous, automated loop:
+
+1. **Custom Domain & Entry Point (.tech Domains):**
+   - **`slothops.shivysidinfo.tech`** serves as the public entry point with automatic Let's Encrypt TLS/SSL termination.
+   - Built-in DNS telemetry constantly monitors CNAME resolution and routing health.
+
+2. **Cloud Hosting & Queue Processing (Render):**
+   - **`slothops-web` (FastAPI):** Serves the interactive user dashboard, REST API, and telemetry endpoints.
+   - **`slothops-worker` (Background Worker):** Orchestrated via `render.yaml` Blueprint, running independently to poll incoming chore queues and eliminate noise asynchronously while you sleep.
+
+3. **Cognitive Distillation Engine (Thinking Machines Tinker):**
+   - Ingests noisy tasks and runs inference on our fine-tuned **`SlothDistill-8B`** model (`sloth-distill-v1`).
+   - Slashes output token bloat by 88.3% and delivers 1-click decisions in under 200ms.
+
+4. **Long-Term Sloth Memory Cortex (Backboard.io):**
+   - **`SlothOps Agent`** provides persistent state across sessions.
+   - Recalls user working habits via semantic auto-recall (`memory="Readonly"`) and auto-persists new preferences (`memory="Auto"`).
 
 ### 1. Thinking Machines (Tinker) — Open-Weight LoRA Fine-Tuning
 Standard LLMs are notoriously verbose: you give them a 300-word meeting invite, and they generate a 400-word essay explaining why you should attend.
