@@ -14,6 +14,7 @@ class TinkerService:
         self.api_key = settings.tinker_api_key
         self.base_model = settings.tinker_base_model
         self.fine_tuned_model = settings.tinker_fine_tuned_model
+        self.endpoint = settings.tinker_endpoint
         self.is_live = bool(self.api_key and not self.api_key.startswith("your_"))
         
     async def distill_task(self, raw_text: str, user_sloth_rules: Optional[str] = None) -> Dict[str, Any]:
@@ -31,27 +32,31 @@ class TinkerService:
         
         if self.is_live:
             try:
-                # Live call to Thinking Machines Tinker API endpoint
+                # Live call to Thinking Machines Tinker OpenAI-compatible endpoint
                 async with httpx.AsyncClient(timeout=30.0) as client:
                     response = await client.post(
-                        "https://api.thinkingmachines.ai/v1/completions",
+                        self.endpoint,
                         headers={
                             "Authorization": f"Bearer {self.api_key}",
                             "Content-Type": "application/json"
                         },
                         json={
-                            "model": self.fine_tuned_model,
-                            "prompt": f"<|system|>{system_prompt}<|user|>{user_prompt}<|assistant|>",
+                            "model": f"tinker://{self.fine_tuned_model}",
+                            "messages": [
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": user_prompt}
+                            ],
                             "max_tokens": 256,
                             "temperature": 0.2
                         }
                     )
                     if response.status_code == 200:
-                        content = response.json().get("choices", [{}])[0].get("text", "")
+                        content = response.json().get("choices", [{}])[0].get("message", {}).get("content", "")
                         return self._parse_or_structure(content, raw_text)
+                    else:
+                        print(f"[TinkerService] Endpoint returned status {response.status_code}: {response.text}")
             except Exception as e:
-                # Log and fallback gracefully
-                print(f"[TinkerService] Warning: Live call failed ({e}), falling back to local SlothDistill engine.")
+                print(f"[TinkerService] Live call failed ({e}), falling back to local SlothDistill engine.")
 
         # Local fine-tuned distillation engine (simulates the LoRA weight outputs)
         return self._local_distill(raw_text, user_sloth_rules)

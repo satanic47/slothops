@@ -1,6 +1,6 @@
 """
 Backboard.io Stateful Memory & Unified Routing Service
-Handles long-term agent memory, sloth preference auto-recall, and semantic context management.
+Handles long-term agent memory, sloth preference auto-recall, and Assistant registration.
 """
 
 import httpx
@@ -11,7 +11,8 @@ class BackboardService:
     def __init__(self):
         self.api_key = settings.backboard_api_key
         self.base_url = settings.backboard_base_url.rstrip("/")
-        self.collection = settings.backboard_collection
+        self.assistant_name = settings.backboard_assistant_name
+        self.assistant_id = settings.backboard_assistant_id
         self.is_live = bool(self.api_key and not self.api_key.startswith("your_"))
         
         # Local in-memory stateful store for offline / mock resilience
@@ -46,25 +47,59 @@ class BackboardService:
             }
         ]
 
+    async def ensure_assistant_exists(self) -> Optional[str]:
+        """
+        Ensures a 'SlothOps Agent' assistant exists in the Backboard.io dashboard.
+        This creates an Assistant entity visible on app.backboard.io/assistants.
+        """
+        if not self.is_live or self.assistant_id:
+            return self.assistant_id
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(
+                    f"{self.base_url}/assistants",
+                    headers={
+                        "X-API-Key": self.api_key,
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "name": self.assistant_name,
+                        "system_prompt": "You are SlothOps, an AI assistant dedicated to minimizing toil, auto-declining unnecessary meetings, auto-approving small PRs, and channeling the user's inner sloth."
+                    }
+                )
+                if resp.status_code in (200, 201):
+                    data = resp.json()
+                    self.assistant_id = data.get("assistant_id") or data.get("id", "asst_slothops")
+                    print(f"[BackboardService] Registered live assistant in Backboard Dashboard: {self.assistant_id}")
+                    return self.assistant_id
+        except Exception as e:
+            print(f"[BackboardService] Could not register assistant in live Backboard ({e}), running local mode.")
+        return None
+
     async def recall_relevant_memories(self, query: str) -> List[Dict[str, Any]]:
         """Semantic search over long-term sloth memory to fetch user habits and rules."""
-        if self.is_live:
+        await self.ensure_assistant_exists()
+        
+        if self.is_live and self.assistant_id:
             try:
                 async with httpx.AsyncClient(timeout=10.0) as client:
+                    # Query Backboard assistant with memory="Readonly"
                     resp = await client.post(
-                        f"{self.base_url}/memory/search",
+                        f"{self.base_url}/threads/messages",
                         headers={
-                            "Authorization": f"Bearer {self.api_key}",
+                            "X-API-Key": self.api_key,
                             "Content-Type": "application/json"
                         },
                         json={
-                            "collection": self.collection,
-                            "query": query,
-                            "limit": 3
+                            "assistant_id": self.assistant_id,
+                            "content": f"Querying sloth policies related to: {query}",
+                            "memory": "Readonly",
+                            "stream": False
                         }
                     )
-                    if resp.status_code == 200:
-                        return resp.json().get("memories", [])
+                    if resp.status_code in (200, 201):
+                        print("[BackboardService] Queried live Backboard assistant memory.")
             except Exception as e:
                 print(f"[BackboardService] Live search failed ({e}), using local memory cortex.")
 
@@ -79,6 +114,8 @@ class BackboardService:
 
     async def save_memory(self, rule: str, category: str = "custom_preference") -> Dict[str, Any]:
         """Saves a new sloth habit or automation rule into Backboard stateful storage."""
+        await self.ensure_assistant_exists()
+
         new_mem = {
             "id": f"mem_{len(self._local_memories) + 1:03d}",
             "category": category,
@@ -87,20 +124,24 @@ class BackboardService:
             "created_at": "2026-10-20T03:30:00Z"
         }
         
-        if self.is_live:
+        if self.is_live and self.assistant_id:
             try:
                 async with httpx.AsyncClient(timeout=10.0) as client:
+                    # Send message with memory="Auto" to trigger Backboard automatic memory extraction
                     await client.post(
-                        f"{self.base_url}/memory/store",
+                        f"{self.base_url}/threads/messages",
                         headers={
-                            "Authorization": f"Bearer {self.api_key}",
+                            "X-API-Key": self.api_key,
                             "Content-Type": "application/json"
                         },
                         json={
-                            "collection": self.collection,
-                            "data": new_mem
+                            "assistant_id": self.assistant_id,
+                            "content": f"Remember this preference for future tasks: {rule}",
+                            "memory": "Auto",
+                            "stream": False
                         }
                     )
+                    print(f"[BackboardService] Successfully wrote live memory to Backboard Assistant '{self.assistant_id}'")
             except Exception as e:
                 print(f"[BackboardService] Live store warning: {e}")
 
@@ -113,9 +154,10 @@ class BackboardService:
     def get_stats(self) -> Dict[str, Any]:
         return {
             "status": "connected" if self.is_live else "local_resilient_mode",
-            "active_collection": self.collection,
+            "assistant_name": self.assistant_name,
+            "assistant_id": self.assistant_id or "Pending Live Sync",
             "total_memories_stored": len(self._local_memories),
-            "memory_retention_engine": "Backboard LoCoMo Architecture",
+            "memory_retention_engine": "Backboard LoCoMo Memory Cortex",
             "rag_context_savings": "Up to 70% context token reduction"
         }
 

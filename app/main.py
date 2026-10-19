@@ -1,10 +1,11 @@
 """
 SlothOps - Autonomous 'Channel Your Inner Sloth' AI Agent Platform
 FastAPI Server connecting Thinking Machines Tinker, Backboard.io, Render, and .tech.
+Supports root '/' and subpath '/slothops' (e.g. shivysidinfo.tech/slothops).
 """
 
 import os
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, APIRouter
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -25,8 +26,11 @@ app = FastAPI(
 
 # Static & Template mounts
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+static_dir = os.path.join(BASE_DIR, "static")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+app.mount("/slothops/static", StaticFiles(directory=static_dir), name="slothops_static")
 
 # --- Request Models ---
 class TriageRequest(BaseModel):
@@ -37,10 +41,8 @@ class MemoryRequest(BaseModel):
     rule: str
     category: Optional[str] = "custom_rule"
 
-# --- Endpoints ---
-
-@app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
+# --- Reusable Route Logic ---
+async def render_dashboard(request: Request):
     stats = sloth_orchestrator.get_summary_stats()
     domain_status = domain_verifier.verify_domain_status()
     tasks = sloth_orchestrator.processed_tasks
@@ -60,25 +62,22 @@ async def home(request: Request):
         }
     )
 
-@app.get("/api/health")
-async def health_check():
-    """Health check endpoint for Render deployment."""
+async def get_health():
     return {
         "status": "healthy",
         "service": "SlothOps Web API",
         "environment": settings.environment,
         "render_runtime": settings.is_render_env,
+        "domain": f"{settings.tech_custom_domain}{settings.tech_subpath}",
         "partners": {
             "thinking_machines_tinker": "connected",
             "backboard_io": "connected",
             "render": "active",
-            "tech_domains": settings.tech_custom_domain
+            "tech_domains": f"{settings.tech_custom_domain}{settings.tech_subpath}"
         }
     }
 
-@app.get("/api/partners/status")
-async def partner_status():
-    """Returns real-time status across all 4 Hacktoberfest official partners."""
+async def get_partner_status():
     return {
         "partners": [
             {
@@ -90,10 +89,10 @@ async def partner_status():
             },
             {
                 "name": "Backboard.io",
-                "role": "Stateful Long-Term Memory & Context Routing",
-                "collection": settings.backboard_collection,
-                "retention_engine": "LoCoMo Memory Cortex",
-                "status": "Active (Stateful Persistence)"
+                "role": "Stateful Long-Term Memory & Assistant Cortex",
+                "assistant": settings.backboard_assistant_name,
+                "retention_engine": "LoCoMo Memory Architecture",
+                "status": "Active (Stateful Assistant)"
             },
             {
                 "name": "Render",
@@ -104,40 +103,33 @@ async def partner_status():
             },
             {
                 "name": ".tech Domains",
-                "role": "Custom Production Domain & DNS Routing",
-                "domain": settings.tech_custom_domain,
+                "role": "Custom Production Domain & Subpath Routing",
+                "domain": f"{settings.tech_custom_domain}{settings.tech_subpath}",
                 "cname_target": settings.tech_cname_target,
                 "status": "Active (DNS Telemetry Online)"
             }
         ]
     }
 
-@app.post("/api/sloth/triage")
-async def triage_task(req: TriageRequest):
-    """Submits chaotic input for autonomous sloth distillation and 1-click execution."""
+async def execute_triage(req: TriageRequest):
     result = await sloth_orchestrator.triage_chore(req.title, req.content)
     return result
 
-@app.get("/api/sloth/tasks")
-async def list_tasks():
-    return sloth_orchestrator.processed_tasks
+# Router definition so routes mount on both "/" and "/slothops"
+router = APIRouter()
 
-@app.get("/api/memory")
-async def list_memories():
-    return {
-        "memories": backboard_service.list_all_memories(),
-        "stats": backboard_service.get_stats()
-    }
+router.add_api_route("/", render_dashboard, methods=["GET"], response_class=HTMLResponse)
+router.add_api_route("/api/health", get_health, methods=["GET"])
+router.add_api_route("/api/partners/status", get_partner_status, methods=["GET"])
+router.add_api_route("/api/sloth/triage", execute_triage, methods=["POST"])
+router.add_api_route("/api/sloth/tasks", lambda: sloth_orchestrator.processed_tasks, methods=["GET"])
+router.add_api_route("/api/memory", lambda: {"memories": backboard_service.list_all_memories(), "stats": backboard_service.get_stats()}, methods=["GET"])
+router.add_api_route("/api/memory", lambda req: backboard_service.save_memory(req.rule, req.category), methods=["POST"])
+router.add_api_route("/api/tinker/benchmark", lambda: tinker_service.get_benchmark_metrics(), methods=["GET"])
+router.add_api_route("/api/domain/verify", lambda: domain_verifier.verify_domain_status(), methods=["GET"])
 
-@app.post("/api/memory")
-async def add_memory(req: MemoryRequest):
-    new_mem = await backboard_service.save_memory(req.rule, req.category)
-    return new_mem
+# Mount at root "/"
+app.include_router(router)
 
-@app.get("/api/tinker/benchmark")
-async def get_tinker_benchmark():
-    return tinker_service.get_benchmark_metrics()
-
-@app.get("/api/domain/verify")
-async def verify_domain():
-    return domain_verifier.verify_domain_status()
+# Also mount with prefix "/slothops" for subpath hosting (shivysidinfo.tech/slothops)
+app.include_router(router, prefix="/slothops")
