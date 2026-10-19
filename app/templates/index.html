@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SlothOps - Channel Your Inner Sloth with Open-Source AI</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20%220%22%20%22100%22%20%22100%22><text y=%22.9em%22 font-size=%2290%22>🦥</text></svg>">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="header-top">
+        <div class="logo-area">
+          <div class="logo-icon">🦥</div>
+          <div>
+            <h1 class="brand-title">SlothOps</h1>
+            <p class="brand-tagline">Channel your inner sloth: Autonomous chore distillation & task elimination powered by open-source AI.</p>
+          </div>
+        </div>
+        <div class="ticker-stats">
+          <div class="stat-pill">
+            <div class="stat-val" id="hours-saved-stat">{{ stats.total_hours_saved }}h</div>
+            <div class="stat-lbl">Time Saved</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-val" id="tasks-slothed-stat">{{ stats.total_tasks_slothed }}</div>
+            <div class="stat-lbl">Chores Eliminated</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-val" style="color: var(--accent-green);">{{ stats.sloth_efficiency_rating }}</div>
+            <div class="stat-lbl">Sloth Efficiency</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 4 Official Hacktoberfest Partners Ribbon -->
+    <section>
+      <div class="partner-ribbon">
+        <div class="partner-card">
+          <div class="partner-name">
+            <span>Thinking Machines (Tinker)</span>
+            <span class="status-badge">LoRA Fine-Tuned</span>
+          </div>
+          <div class="partner-role">Extreme task distillation using fine-tuned open-weight models (Llama-3-8B).</div>
+        </div>
+        <div class="partner-card">
+          <div class="partner-name">
+            <span>Backboard.io</span>
+            <span class="status-badge">Memory Active</span>
+          </div>
+          <div class="partner-role">Stateful long-term memory & sloth policy auto-recall across sessions.</div>
+        </div>
+        <div class="partner-card">
+          <div class="partner-name">
+            <span>Render</span>
+            <span class="status-badge">Blueprint Ready</span>
+          </div>
+          <div class="partner-role">Cloud web service + background worker running periodic chore triage.</div>
+        </div>
+        <div class="partner-card">
+          <div class="partner-name">
+            <span>.tech Domains</span>
+            <span class="status-badge">DNS Online</span>
+          </div>
+          <div class="partner-role">Custom production domain ({{ domain_status.custom_domain }}) mapped to Render.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Dashboard Grid -->
+    <div class="dashboard-grid">
+      <!-- Left Column: Sloth Triage Engine & Stream -->
+      <div>
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">⚡ Instant Sloth Triage</h2>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" onclick="loadPreset('meeting')">Try Meeting</button>
+              <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" onclick="loadPreset('pr')">Try PR Diff</button>
+              <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" onclick="loadPreset('survey')">Try Survey</button>
+            </div>
+          </div>
+
+          <form id="triage-form">
+            <div class="form-group">
+              <label for="task-title">Chore Title / Subject</label>
+              <input type="text" id="task-title" placeholder="e.g. Mandatory 1-hour Status Review Sync" required />
+            </div>
+            <div class="form-group">
+              <label for="task-content">Raw Chaotic Input (Email, PR diff, Slack thread, Form)</label>
+              <textarea id="task-content" rows="4" placeholder="Paste the noisy wall of text you dread dealing with..." required></textarea>
+            </div>
+            <button type="submit" class="btn" style="width: 100%;">⚡ Distill with SlothOps</button>
+          </form>
+        </div>
+
+        <!-- Task Stream -->
+        <div style="margin-top: 2rem;">
+          <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem;">🦥 Automated Sloth Task Stream</h3>
+          <div id="task-container" class="task-list">
+            {% for task in tasks %}
+            <div class="task-card">
+              <div class="task-card-top">
+                <span class="task-title">{{ task.title }}</span>
+                <span class="action-pill">{{ task.sloth_action }}</span>
+              </div>
+              <p class="task-summary">{{ task.one_line_summary }}</p>
+              <div class="draft-box">
+                <strong>Auto-Draft:</strong> {{ task.lazy_reply_draft }}
+              </div>
+              <div class="task-meta">
+                <span>⏱ Saved: <strong>{{ task.minutes_saved }}m</strong></span>
+                <span>🧠 Model: <em>Tinker LoRA + Backboard RAG</em></span>
+                <span class="status-badge">AUTO-EXECUTED</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Backboard Memory & Partner Telemetry -->
+      <div>
+        <!-- Backboard.io Memory Cortex -->
+        <div class="panel" style="margin-bottom: 2rem;">
+          <div class="panel-header">
+            <h2 class="panel-title">🧠 Backboard.io Sloth Rules</h2>
+            <span class="status-badge" style="background: rgba(78, 205, 196, 0.15); color: var(--accent-cyan);">LoCoMo State</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Backboard maintains long-term memory of how you prefer tasks handled so you never repeat yourself.
+          </p>
+
+          <div id="memory-container" class="memory-list">
+            {% for mem in memories %}
+            <div class="memory-item">
+              <div class="memory-rule">"{{ mem.rule }}"</div>
+              <div class="memory-meta">Policy Category: {{ mem.category }} • Stored in Backboard.io</div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <form id="memory-form" style="margin-top: 1rem;">
+            <div class="form-group">
+              <input type="text" id="memory-rule-input" placeholder="Add a new sloth rule (e.g. Always decline webinars)..." required />
+            </div>
+            <button type="submit" class="btn btn-secondary" style="width: 100%; font-size: 0.85rem; padding: 0.5rem;">+ Teach SlothOps New Habit</button>
+          </form>
+        </div>
+
+        <!-- Thinking Machines Benchmark -->
+        <div class="panel" style="margin-bottom: 2rem;">
+          <div class="panel-header">
+            <h2 class="panel-title">🔬 Tinker Fine-Tuning Delta</h2>
+            <span class="status-badge">LoRA Benchmark</span>
+          </div>
+          <table class="benchmark-table">
+            <thead>
+              <tr>
+                <th>Benchmark</th>
+                <th>Base Model</th>
+                <th>Tinker LoRA</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in benchmark.metrics %}
+              <tr>
+                <td><strong>{{ m.metric }}</strong></td>
+                <td style="color: var(--text-muted);">{{ m.base_model }}</td>
+                <td class="badge-green">{{ m.tinker_lora }} <br><small style="color: var(--accent-gold);">({{ m.improvement }})</small></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Render & .tech Telemetry -->
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">🌐 Deployment & Domain</h2>
+          </div>
+          <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.6rem;">
+            <div><strong>Render Web Host:</strong> <span style="color: var(--accent-cyan);">{{ domain_status.render_service_endpoint }}</span></div>
+            <div><strong>Custom Domain:</strong> <span style="color: var(--accent-gold);">{{ domain_status.custom_domain }}</span></div>
+            <div><strong>DNS Status:</strong> <span class="status-badge">{{ domain_status.dns_status }}</span></div>
+            <div><strong>SSL Certificate:</strong> {{ domain_status.ssl_status }}</div>
+            <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color); font-size: 0.75rem; color: var(--text-muted);">
+              Render Blueprint: <code>render.yaml</code> active with web service + background sloth worker.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>SlothOps • Built for Hacktoberfest 2026 Week 3: Slow and Steady Challenge</p>
+      <p style="margin-top: 0.3rem;">Powered by Thinking Machines Tinker, Backboard.io, Render, and .tech Domains.</p>
+    </footer>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

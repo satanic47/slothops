@@ -1,0 +1,47 @@
+# ==============================================================================
+# Render Blueprint (Infrastructure-as-Code) for SlothOps
+# Hacktoberfest 2026 Week 3: Slow and Steady Challenge
+# ==============================================================================
+
+services:
+  # 1. Web Service (FastAPI Server & User Dashboard)
+  - type: web
+    name: slothops-web
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    region: oregon
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: ENVIRONMENT
+        value: production
+      - key: TINKER_API_KEY
+        sync: false
+      - key: BACKBOARD_API_KEY
+        sync: false
+      - key: TECH_CUSTOM_DOMAIN
+        value: slothops.tech
+
+  # 2. Background Worker (Autonomous Sloth Automation Engine)
+  # Channels the inner sloth by processing chores, inbox triage, and PR summaries while you sleep
+  - type: worker
+    name: slothops-worker
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m app.core.sloth_orchestrator --worker
+    plan: starter
+    region: oregon
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: ENVIRONMENT
+        value: production
+      - key: TINKER_API_KEY
+        sync: false
+      - key: BACKBOARD_API_KEY
+        sync: false
