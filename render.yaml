@@ -24,7 +24,7 @@ services:
       - key: BACKBOARD_API_KEY
         sync: false
       - key: TECH_CUSTOM_DOMAIN
-        value: slothops.tech
+        value: slothops.shivysidinfo.tech
 
   # 2. Background Worker (Autonomous Sloth Automation Engine)
   # Channels the inner sloth by processing chores, inbox triage, and PR summaries while you sleep

@@ -23,8 +23,8 @@ class PartnerConfig(BaseModel):
     is_render_env: bool = bool(os.getenv("RENDER", False))
     
     # .tech Domains
-    tech_custom_domain: str = os.getenv("TECH_CUSTOM_DOMAIN", "shivysidinfo.tech")
-    tech_subpath: str = os.getenv("TECH_SUBPATH", "/slothops")
+    tech_custom_domain: str = os.getenv("TECH_CUSTOM_DOMAIN", "slothops.shivysidinfo.tech")
+    tech_subpath: str = os.getenv("TECH_SUBPATH", "")
     tech_cname_target: str = os.getenv("TECH_CNAME_TARGET", "slothops.onrender.com")
     
     # App
