@@ -3,9 +3,34 @@
 [![Hacktoberfest 2026](https://img.shields.io/badge/Hacktoberfest-2026_Week_3-3D5F58?style=for-the-badge&logo=hacktoberfest)](https://dev.to/challenges/hacktoberfest-week3-2026-10-19)
 [![Theme](https://img.shields.io/badge/Theme-Slow_and_Steady-F5B726?style=for-the-badge)](https://dev.to/challenges/hacktoberfest-week3-2026-10-19)
 [![License: MIT](https://img.shields.io/badge/License-MIT-4ECDC4?style=for-the-badge)](LICENSE)
+[![Live URL](https://img.shields.io/badge/Live_Production-slothops.shivysidinfo.tech-00ff66?style=for-the-badge)](https://slothops.shivysidinfo.tech)
 
 > **"Do less, achieve more."**  
-> SlothOps is an autonomous cognitive noise-reduction and chore-elimination platform built for **Hacktoberfest 2026 Week 3 ("Slow and Steady: Channel Your Inner Sloth")**. It harnesses open-source AI to automatically distill meetings, triage chaotic emails, auto-approve routine PRs, and delegate bureaucratic chores while you relax.
+> SlothOps is an autonomous cognitive noise-reduction and chore-elimination platform. It harnesses open-source AI and stateful memory to automatically distill meetings, triage chaotic emails, auto-approve routine PRs, and delegate bureaucratic chores while you relax.
+
+---
+
+## 🏆 Challenge Overview & Submission Brief
+
+### 1. Chosen Vertical
+- **Vertical:** Autonomous Workplace Productivity, Developer Well-Being & Cognitive Noise Reduction.
+- **Persona:** **Digital Sloth Copilot (`SlothOps Agent`)** — A calm, hyper-efficient AI agent designed around the philosophy that sloths have software engineering figured out: conserve mental energy, protect deep work focus blocks, and systematically eliminate low-value digital toil.
+
+### 2. Approach and Logic
+- **Dynamic Context Awareness:** Ingests chaotic, unstructured corporate noise (meeting invites, PR diffs, vendor cold emails, status surveys) and evaluates each item dynamically against stored user policies in real time.
+- **Stateful Memory Cortex (Backboard.io):** Unlike stateless LLM bots that ask repetitive questions, SlothOps maintains long-term memory of user habits (e.g. *"Never accept meetings before 11 AM"*, *"Auto-approve PRs < 50 lines with green CI"*), semantically recalling relevant rules via `memory="Readonly"` and auto-persisting new habits via `memory="Auto"`.
+- **Low-Latency Task Distillation (Thinking Machines Tinker):** Rather than generating rambling multi-paragraph replies, SlothOps runs inference on our fine-tuned LoRA model (`sloth-distill-v1`), compressing noisy input by 88.3% into a single actionable decision card (`AUTO_DECLINE_WITH_SUMMARY`, `ONE_CLICK_APPROVE`, `SNOOZE_TO_FRIDAY`, `AUTO_ARCHIVE_NO_ACTION`).
+
+### 3. How the Solution Works
+1. **Ingestion:** Chaotic communication is submitted via the web dashboard or picked up automatically by the autonomous background worker.
+2. **Context & Policy Recall:** SlothOps queries the long-term memory cortex to identify user preferences matching the task category.
+3. **Reasoning & Distillation:** The fine-tuned open-weight model evaluates urgency, dependencies, and risk level, outputting a 1-line summary, execution action, and polite auto-drafted reply.
+4. **Execution & Telemetry:** Low-risk tasks are auto-executed or queued for 1-click confirmation; time saved is calculated and reflected in live telemetry metrics.
+
+### 4. Assumptions Made
+- **Safe Automation for Low-Risk Toil:** Routine chores (small PRs with 100% CI pass rates, routine status syncs with no blockers, vendor outreach) can be safely drafted or resolved without human micromanagement.
+- **Action-First Interface:** Users want immediate, actionable decisions (buttons & 1-line summaries) rather than lengthy conversational banter.
+- **Privacy & Sovereignty:** Sensitive work communication and source code must remain secure using open-weight models and dedicated cloud infrastructure.
 
 ---
 
